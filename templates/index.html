@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Hand Gesture Recognition</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <h1>🖐 Hand Gesture Recognition</h1>
+  <video id="webcam" autoplay playsinline width="640" height="480"
+       style="transform: scaleX(-1);"></video>
+  <div id="fingerStatus" style="font-size: 1.2em; margin-top: 10px;"></div>
+  <div id="gestureName" style="font-size: 1.5em; font-weight: bold; margin: 10px 0;"></div>
+  <canvas id="gestureChart" width="400" height="200"></canvas>
+
+  <script src="/static/script.js"></script>
+</body>
+</html>
