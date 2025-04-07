@@ -25,14 +25,14 @@ def get_finger_status(hand):
     # 오른손 기준
     fingers = []
 
-    # 엄지 펼쳐졌는지 여부:
-    # 랜드마크 4가 랜드마크 2의 오른쪽에 있으면 펼쳐진 상태
+    # 엄지 (오른손 기준):
+    # 랜드마크 4가 랜드마크 3의 왼쪽에 있으면 펼쳐진 상태
     if hand.landmark[4].x < hand.landmark[3].x:
         fingers.append(1)
     else:
         fingers.append(0)
 
-    # 나머지 손가락 펼쳐졌는지 여부:
+    # 나머지 손가락 (오른손 기준):
     # 각 손가락의 팁 (8, 12, 16, 20)이 PIP (6, 10, 14, 18) 위에 있으면 펼쳐진 상태
     tips = [8, 12, 16, 20]
     pip_joints = [6, 10, 14, 18]
@@ -43,21 +43,8 @@ def get_finger_status(hand):
             fingers.append(0)
 
     return fingers
+
 def recognize_gesture(fingers_status, hand=None, image_width=None, image_height=None):
-    if fingers_status == [0, 0, 0, 0, 0]:
-        return 'fist'
-    elif fingers_status == [0, 1, 0, 0, 0]:
-        return 'point'
-    elif fingers_status == [1, 1, 1, 1, 1]:
-        return 'open'
-    elif fingers_status == [0, 1, 1, 0, 0]:
-        return 'peace'
-    elif fingers_status == [1, 1, 0, 0, 0]:
-        return 'standby'
-    elif fingers_status == [1, 0, 0, 0, 0]:
-        return 'thumbs_up'
-    elif fingers_status == [1, 0, 0, 0, 1]:
-        return 'rock'  # 또는 'call_me'
 
     # OK 사인: 엄지(4번)와 검지(8번) 끝 사이 거리 기준
     if hand and image_width and image_height:
@@ -69,7 +56,24 @@ def recognize_gesture(fingers_status, hand=None, image_width=None, image_height=
         distance = (dx**2 + dy**2)**0.5
 
         if distance < 30:
-            return 'ok_sign'
+            return 'ok_sign' #👌
+
+    if fingers_status == [0, 0, 0, 0, 0]:
+        return 'fist'       #✊
+    elif fingers_status == [0, 1, 0, 0, 0]:
+        return 'point'      #☝️
+    elif fingers_status == [1, 1, 1, 1, 1]:
+        return 'open'       #✋
+    elif fingers_status == [0, 1, 1, 0, 0]:
+        return 'peace'      #✌️
+    elif fingers_status == [1, 1, 0, 0, 0]:
+        return 'standby'    #👆
+    elif fingers_status == [1, 0, 0, 0, 0]:
+        return 'thumbs_up'  #👍
+    elif fingers_status == [1, 0, 0, 0, 1]:
+        return 'rock'       #🤙
+    elif fingers_status == [1, 1, 0, 0, 1]:
+        return 'love_u'     #🤟
 
     return 'none'
 
@@ -94,8 +98,15 @@ def analyze():
     fingers = []
 
     if result.multi_hand_landmarks:
+        hand_landmark = result.multi_hand_landmarks[0]
+
         fingers = get_finger_status(result.multi_hand_landmarks[0])
-        gesture = recognize_gesture(fingers)
+        gesture = recognize_gesture(
+            fingers,
+            hand=hand_landmark,
+            image_width=frame.shape[1],
+            image_height=frame.shape[0]
+        )
 
         print(gesture)
         # 손 랜드마크와 연결선 그리기

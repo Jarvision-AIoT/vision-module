@@ -33,6 +33,24 @@ function updateChart(gesture) {
   }
 }
 
+function getGestureWithEmoji(gesture) {
+  const emojiMap = {
+    'ok_sign': '👌',
+    'fist': '✊',
+    'point': '👉',
+    'open': '🖐️',
+    'peace': '✌️',
+    'standby': '🫲',
+    'thumbs_up': '👍',
+    'rock': '🤘',
+    'love_u': '🤟',
+    'none': '❓'
+  };
+
+  const emoji = emojiMap[gesture] || '❓';
+  return `${emoji} ${gesture}`;
+}
+
 async function sendFrame() {
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
@@ -56,9 +74,9 @@ async function sendFrame() {
       `손가락 상태: [${result.fingers.join(', ')}]`;
   }
 
-  // 제스처 이름 표시
+  // 제스처 이름을 이모지와 함께 표시
   document.getElementById('gestureName').innerText =
-    `현재 제스처: ${result.gesture}`;
+  `현재 제스처: ${getGestureWithEmoji(result.gesture)}`;
 }
 
 setInterval(sendFrame, 1000);
