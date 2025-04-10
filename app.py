@@ -3,6 +3,7 @@ import cv2
 import numpy as np
 import base64
 import mediapipe as mp
+import math
 
 app = Flask(__name__)
 
@@ -14,6 +15,38 @@ hands = mp_hands.Hands(
     min_detection_confidence=0.5
 )
 mp_drawing = mp.solutions.drawing_utils # 손 관절에 시각적으로 선을 연결해주는 Util
+
+def angle_between(v1, v2):
+    """
+    두 2D 벡터 사이의 각도(라디안 단위)를 반환
+    """
+    v1 = np.array(v1)
+    v2 = np.array(v2)
+    unit_v1 = v1 / np.linalg.norm(v1)
+    unit_v2 = v2 / np.linalg.norm(v2)
+    dot_product = np.clip(np.dot(unit_v1, unit_v2), -1.0, 1.0)
+    angle = np.arccos(dot_product)  # 라디안
+    return angle
+
+
+
+def is_thumb_extended(hand):
+    """
+    엄지가 펴졌는지 굽혀졌는지를 각도로 판단
+    - 0~30도: 펴짐
+    - 40도 이상: 굽혀짐
+    """
+    wrist = hand.landmark[0]
+    thumb_mcp = hand.landmark[2]
+    thumb_tip = hand.landmark[4]
+
+    v1 = [thumb_mcp.x - wrist.x, thumb_mcp.y - wrist.y]
+    v2 = [thumb_tip.x - thumb_mcp.x, thumb_tip.y - thumb_mcp.y]
+
+    angle = angle_between(v1, v2) * (180 / math.pi)  # 라디안 → 도
+
+    return angle < 40  # 기준 각도 (경험적으로 30~40도 추천)
+
 
 def get_finger_status(hand, handedness = 'Right'):
     """
@@ -30,16 +63,22 @@ def get_finger_status(hand, handedness = 'Right'):
     fingers = []
 
     # 엄지:
-    if handedness == 'Right': # 오른손
-        if hand.landmark[4].x < hand.landmark[3].x:
-            fingers.append(1)
-        else:
-            fingers.append(0)
-    else:  # 왼손
-        if hand.landmark[4].x > hand.landmark[3].x:
-            fingers.append(1)
-        else:
-            fingers.append(0)
+  #  if handedness == 'Right': # 오른손
+  #      if hand.landmark[4].x < hand.landmark[3].x:
+  #          fingers.append(1)
+  #      else:
+  #          fingers.append(0)
+  #  else:  # 왼손
+  #      if hand.landmark[4].x > hand.landmark[3].x:
+  #          fingers.append(1)
+  #      else:
+  #          fingers.append(0)
+  
+    if is_thumb_extended(hand):
+        fingers.append(1)
+    else:
+        fingers.append(0)
+
 
     # 나머지 손가락 (오른손 기준):
     # 각 손가락의 팁 (8, 12, 16, 20)이 PIP (6, 10, 14, 18) 위에 있으면 펼쳐진 상태
