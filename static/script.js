@@ -53,10 +53,10 @@ function getGestureWithEmoji(gesture) {
   const emojiMap = {
     'ok_sign': '👌',
     'fist': '✊',
-    'point': '👉',
+    'point': '☝️',
     'open': '🖐️',
     'peace': '✌️',
-    'standby': '🫲',
+    'standby': '👆',
     'thumbs_up': '👍',
     'rock': '🤘',
     'love_u': '🤟',
