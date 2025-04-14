@@ -21,3 +21,7 @@ venv/
 # OS
 .DS_Store
 Thumbs.db
+
+# Firebase service account key (DO NOT commit!)
+firebase_keys/
+firebase_keys/
