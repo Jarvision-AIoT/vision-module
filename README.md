@@ -26,7 +26,7 @@ VISION-MODULE/
 
 ## 🚀 Execution
 
-#### 1️⃣ 패키지 설치
+### 1️⃣ 패키지 설치
 
 ```bash
 pip install -r requirements.txt
@@ -56,7 +56,7 @@ VISION-MODULE/
 
 ### 3️⃣ 앱 실행
 
-- `.env` 파일을 다음과 같이 설정하고 프로젝트 폴더테 추가합니다.
+- `.env` 파일을 다음과 같이 설정하고 프로젝트 폴더에 추가합니다.
 ```env
 GOOGLE_APPLICATION_CREDENTIALS=./firebase_keys/firebase_key_{username}.json // <- 수정
 FIREBASE_DATABASE_URL=https://hey-jarvis-665d2-default-rtdb.firebaseio.com/
@@ -83,10 +83,9 @@ VISION-MODULE/
 python app.py
 ```
 
-#### ✅ 접속 방법 (개발자 용)
+### ✅ 접속 방법 (개발자 용)
 
 웹 브라우저에서 다음 URL 접속:
 ```bash
-http://localhost:5000
-// e.g. http://127.0.0.1:5000
+http://localhost:5000  // e.g. http://127.0.0.1:5000
 ```
