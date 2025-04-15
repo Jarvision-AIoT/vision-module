@@ -4,6 +4,10 @@ import numpy as np
 import base64
 import mediapipe as mp
 import math
+from firebase_admin import db
+
+# FIREBASE INITIALIZE !!
+import firebase_config
 
 app = Flask(__name__)
 
@@ -174,6 +178,17 @@ def analyze():
         'gestures': gestures,      # [{'hand': 'Right', 'gesture': 'peace'}, ...]
         'fingers_list': fingers_list  # [{'hand': 'Left', 'fingers': [1,0,0,0,0]}, ...]
     })
+
+@app.route("/send_gesture", methods=["POST"])
+def send_gesture():
+    data = request.get_json()
+    hand = data.get("hand")
+    gesture = data.get("gesture")
+
+    ref = db.reference(f"arduino/gesture/{hand.lower()}")
+    ref.set({"type": gesture})
+
+    return jsonify({"status": "ok"})
 
 if __name__ == '__main__':
     app.run(debug=True)

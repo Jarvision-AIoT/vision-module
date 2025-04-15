@@ -2,12 +2,23 @@ const video = document.getElementById('webcam');
 const canvas = document.createElement('canvas');
 const context = canvas.getContext('2d');
 
-// 차트 셋업
-// 왼손/오른손 별로 카운트 객체를 나눔
+// HAND STABILITY CHECKING VARIABLES
+const STABILITY_THRESHOLD = 3;
+let gestureBuffer = {
+  Left: { prevGesture: null, count: 0 },
+  Right: { prevGesture: null, count: 0 }
+};
+let sentGesture = {
+  Left: null,
+  Right: null
+};
+
+// CHART SETUP
+// LEFT/RIGHT GESTURE COUNT
 const leftGestureCounts = { fist: 0, point: 0, open: 0, peace: 0, standby: 0, unknown: 0, rock: 0, thumbs_up: 0, ok_sign: 0 };
 const rightGestureCounts = { ...JSON.parse(JSON.stringify(leftGestureCounts)) }; // 딥카피
 
-// 왼손 차트
+// CHART: LEFT GESTURE COUNT
 const leftChart = new Chart(document.getElementById('leftChart'), {
   type: 'bar',
   data: {
@@ -21,7 +32,7 @@ const leftChart = new Chart(document.getElementById('leftChart'), {
   options: { scales: { y: { beginAtZero: true } } }
 });
 
-// 오른손 차트
+// CHART: RIGHT GESTURE COUNTT
 const rightChart = new Chart(document.getElementById('rightChart'), {
   type: 'bar',
   data: {
@@ -49,6 +60,7 @@ function updateChart(gesture) {
   }
 }
 
+// GESTURE<->EMOJI DB
 function getGestureWithEmoji(gesture) {
   const emojiMap = {
     'ok_sign': '👌',
@@ -67,6 +79,15 @@ function getGestureWithEmoji(gesture) {
   return `${emoji} ${gesture}`;
 }
 
+function sendGestureToFirebase(hand, gesture) {
+  fetch('/send_gesture', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ hand, gesture })
+  });
+}
+
+// SEND FRAME TO FLASK & FIREBASE
 async function sendFrame() {
   canvas.width = video.videoWidth;
   canvas.height = video.videoHeight;
@@ -81,34 +102,27 @@ async function sendFrame() {
 
   const result = await res.json();
 
-    // 초기화
+  // INITIALIZE
   document.getElementById('leftHand').innerText = '왼손 인식 안됨';
   document.getElementById('rightHand').innerText = '오른손 인식 안됨';
   document.getElementById('fingerStatus').innerText = '';
 
-  // Chart 업데이트: 양손 집계
+  // CHART UPDATE: LEFT/RIGHT
   result.gestures.forEach(g => {
     const targetCounts = g.hand === 'Left' ? leftGestureCounts : rightGestureCounts;
     if (g.gesture in targetCounts) {
       targetCounts[g.gesture]++;
     }
-  
-    const emojiGesture = getGestureWithEmoji(g.gesture);
-    if (g.hand === 'Left') {
-      document.getElementById('leftHand').innerText = `🖐 왼손 제스처: ${emojiGesture}`;
-    } else if (g.hand === 'Right') {
-      document.getElementById('rightHand').innerText = `✋ 오른손 제스처: ${emojiGesture}`;
-    }
   });
   
-  // 차트 다시 그리기
+  // CHART REDRAW: LEFT/RIGHT
   leftChart.data.datasets[0].data = Object.values(leftGestureCounts);
   leftChart.update();
-  
   rightChart.data.datasets[0].data = Object.values(rightGestureCounts);
   rightChart.update();
 
-  // 제스처 및 손가락 상태 표시
+  // DOCUMENT UPDATE: LEFT/RIGHT
+  // - GESTURE NAME
   result.gestures.forEach(g => {
     const emojiGesture = getGestureWithEmoji(g.gesture);
     if (g.hand === 'Left') {
@@ -120,6 +134,7 @@ async function sendFrame() {
     }
   });
 
+  // - FINGER STATUS
   result.fingers_list.forEach(f => {
     const fingerText = `손가락 상태: [${f.fingers.join(', ')}]`;
   
@@ -129,6 +144,27 @@ async function sendFrame() {
       document.getElementById('rightFingers').innerText = fingerText;
     }
   });
+
+  // SEND TO FIREBASE?
+  result.gestures.forEach(g => {
+    const hand = g.hand;
+    const gesture = g.gesture;
+  
+    const buffer = gestureBuffer[hand];
+  
+    if (buffer.prevGesture === gesture) {
+      buffer.count++;
+    } else {
+      buffer.prevGesture = gesture;
+      buffer.count = 1;
+    }
+  
+    // SEND IF ( COUNT REACHED CRITICAL VALUE || DIFFER FROM SENT BEFORE )
+    if (buffer.count === STABILITY_THRESHOLD && sentGesture[hand] !== gesture) {
+      sendGestureToFirebase(hand, gesture);
+      sentGesture[hand] = gesture;
+    }
+  });  
 }
 
 setInterval(sendFrame, 1000);

@@ -16,6 +16,8 @@ VISION-MODULE/
 ├── static/
 │   └── script.js
 ├── templates/
+│   └── index.html
+├── .gitignore
 ├── app.py
 ├── firebase_config.py
 ├── README.md
@@ -32,19 +34,59 @@ pip install -r requirements.txt
 
 ### 2️⃣ 환경 변수 세팅
 
-- `firebase_keys/`에 유저 Firebase 계정 키 JSON 파일 `firebase_key_user.json`이 있어야 하고,
-- 환경 변수 `GOOGLE_APPLICATION_CREDENTIALS`를 새로 생성하여 `your/path/to/firebase_key_user.json`로 설정해야 합니다.
+- `firebase_keys/` 폴더를 생성하고 해당 폴더에 유저 Firebase 계정 키 JSON 파일 `firebase_key_{username}.json`를 추가합니다.
+```plaintext
+Firebase Console 왼쪽 바 -> 프로젝트 개요 -> 프로젝트 설정 -> 서비스 계정 -> 새 비공개 키 생성
+```
+
+```plaintext
+VISION-MODULE/
+├── firebase_keys/
+│   └── firebase_key_{username}.json
+├── static/
+│   └── script.js
+├── templates/
+│   └── index.html
+├── .gitignore
+├── app.py
+├── firebase_config.py
+├── README.md
+└── requirements.txt
+```
 
 ### 3️⃣ 앱 실행
 
+- `.env` 파일을 다음과 같이 설정하고 프로젝트 폴더테 추가합니다.
+```env
+GOOGLE_APPLICATION_CREDENTIALS=./firebase_keys/firebase_key_{username}.json // <- 수정
+FIREBASE_DATABASE_URL=https://hey-jarvis-665d2-default-rtdb.firebaseio.com/
+```
+
+```plaintext
+VISION-MODULE/
+├── firebase_keys/
+│   └── firebase_key_{username}.json
+├── static/
+│   └── script.js
+├── templates/
+│   └── index.html
+├── .env
+├── .gitignore
+├── app.py
+├── firebase_config.py
+├── README.md
+└── requirements.txt
+```
+
+- app을 실행시킵니다.
 ```bash
 python app.py
 ```
 
-#### ✅ 접속 방법
+#### ✅ 접속 방법 (개발자 용)
 
 웹 브라우저에서 다음 URL 접속:
-```
+```bash
 http://localhost:5000
 // e.g. http://127.0.0.1:5000
 ```
