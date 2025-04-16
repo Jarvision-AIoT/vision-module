@@ -6,39 +6,38 @@ import mediapipe as mp
 import math
 from firebase_admin import db
 
-# FIREBASE INITIALIZE !!
+# FIREBASE INITIALIZE
 import firebase_config
 
+# FLASK INITIALIZE
 app = Flask(__name__)
 
-# Mediapipe 설정
-mp_hands = mp.solutions.hands # 손 인식 모델 생성
+# MEDIAPIPE INITIALIZE
+mp_hands = mp.solutions.hands   # CREATE HAND ANALYZE MODEL
 hands = mp_hands.Hands(
     static_image_mode=True,
-    max_num_hands=2,  # ✅ 최대 2개의 손까지 인식하도록 설정
+    max_num_hands=2,            # MAX HAND <= 2
     min_detection_confidence=0.5
 )
-mp_drawing = mp.solutions.drawing_utils # 손 관절에 시각적으로 선을 연결해주는 Util
+mp_drawing = mp.solutions.drawing_utils # HAND LANDSCAPE DRAWING UTIL (NOT USED)
 
 def angle_between(v1, v2):
     """
-    두 2D 벡터 사이의 각도(라디안 단위)를 반환
+    두 2D 벡터 사이의 각도를 라디안 단위([0, π])로 반환
     """
     v1 = np.array(v1)
     v2 = np.array(v2)
     unit_v1 = v1 / np.linalg.norm(v1)
     unit_v2 = v2 / np.linalg.norm(v2)
     dot_product = np.clip(np.dot(unit_v1, unit_v2), -1.0, 1.0)
-    angle = np.arccos(dot_product)  # 라디안
+    angle = np.arccos(dot_product)  # RADIAN [0, PI]
     return angle
-
-
 
 def is_thumb_extended(hand):
     """
     엄지가 펴졌는지 굽혀졌는지를 각도로 판단
-    - 0~30도: 펴짐
-    - 40도 이상: 굽혀짐
+    - [0, 30º]: 펴짐
+    - [40º,  ]: 굽혀짐
     """
     wrist = hand.landmark[0]
     thumb_mcp = hand.landmark[2]
@@ -47,10 +46,9 @@ def is_thumb_extended(hand):
     v1 = [thumb_mcp.x - wrist.x, thumb_mcp.y - wrist.y]
     v2 = [thumb_tip.x - thumb_mcp.x, thumb_tip.y - thumb_mcp.y]
 
-    angle = angle_between(v1, v2) * (180 / math.pi)  # 라디안 → 도
+    angle = angle_between(v1, v2) * (180 / math.pi)  # RADIAN → DEGREE
 
-    return angle < 40  # 기준 각도 (경험적으로 30~40도 추천)
-
+    return angle < 40  # REFERENCE DEGREE, EXPIRIMENTALY RECOMMEND 30-40º
 
 def get_finger_status(hand, handedness = 'Right'):
     """
@@ -63,29 +61,29 @@ def get_finger_status(hand, handedness = 'Right'):
         - 1: 펴져 있을 때
         - 0: 접혀 있을 때
     """
-    # 오른손 기준
     fingers = []
 
-    # 엄지:
-  #  if handedness == 'Right': # 오른손
+    # THUMBS:
+  #  if handedness == 'Right':  # RIGHT
   #      if hand.landmark[4].x < hand.landmark[3].x:
   #          fingers.append(1)
   #      else:
   #          fingers.append(0)
-  #  else:  # 왼손
+  #  else:                      # LEFT
   #      if hand.landmark[4].x > hand.landmark[3].x:
   #          fingers.append(1)
   #      else:
   #          fingers.append(0)
   
+    # CHECK THUMBS
     if is_thumb_extended(hand):
         fingers.append(1)
     else:
         fingers.append(0)
 
 
-    # 나머지 손가락 (오른손 기준):
-    # 각 손가락의 팁 (8, 12, 16, 20)이 PIP (6, 10, 14, 18) 위에 있으면 펼쳐진 상태
+    # CHECK OTHER FINGERS
+    # EXTENDED IF TIP(8, 12, 16, 20) IS ON JOINT(6, 10, 14, 18)
     tips = [8, 12, 16, 20]
     pip_joints = [6, 10, 14, 18]
     for tip, pip in zip(tips, pip_joints):
