@@ -100,6 +100,25 @@ async function sendFrame() {
     headers: { 'Content-Type': 'application/json' }
   });
 
+  if (!res.ok) {
+  console.error('서버가 실패 응답을 보냈습니다:', res.status);
+  return;
+}
+
+const text = await res.text();
+if (!text) {
+  console.error('서버 응답이 비어있습니다.');
+  return;
+}
+
+let result;
+try {
+  result = JSON.parse(text);
+} catch (e) {
+  console.error('JSON 파싱 오류:', e);
+  return;
+}
+
   const result = await res.json();
 
   // INITIALIZE
