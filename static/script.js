@@ -87,101 +87,121 @@ function sendGestureToFirebase(hand, gesture) {
   });
 }
 
-// SEND FRAME TO FLASK & FIREBASE
 async function sendFrame() {
-  canvas.width = video.videoWidth;
-  canvas.height = video.videoHeight;
-  context.drawImage(video, 0, 0, canvas.width, canvas.height);
-  const image = canvas.toDataURL('image/jpeg');
+  try {
+    // 비디오에서 이미지 캡처
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const image = canvas.toDataURL('image/jpeg');
 
-  try{
-    const res = await fetch('/analyze', {
-    method: 'POST',
-    body: JSON.stringify({ image }),
-    headers: { 'Content-Type': 'application/json' }
-  });
+    // 서버로 전송
+    const response = await fetch('/analyze', {
+      method: 'POST',
+      body: JSON.stringify({ image }),
+      headers: { 'Content-Type': 'application/json' }
+    });
 
-  if (!res.ok) {
-  console.error('서버가 실패 응답을 보냈습니다:', res.status);
-  return;
-  }
+    // 응답 확인
+    if (!response.ok) {
+      console.error('서버 응답 오류:', response.status);
+      return;
+    }
+
+    // JSON 응답 파싱
+    const result = await response.json();
+
+    // 초기 상태 설정
+    document.getElementById('leftHand').innerText = '왼손 인식 안됨';
+    document.getElementById('rightHand').innerText = '오른손 인식 안됨';
+    document.getElementById('fingerStatus').innerText = '';
+
+    // 제스처 카운트 업데이트
+    if (result.gestures && Array.isArray(result.gestures)) {
+      result.gestures.forEach(g => {
+        if (g.hand && g.gesture) {
+          const targetCounts = g.hand === 'Left' ? leftGestureCounts : rightGestureCounts;
+          if (g.gesture in targetCounts) {
+            targetCounts[g.gesture]++;
+          }
+        }
+      });
+    }
     
+    // 차트 업데이트
+    if (leftChart && leftChart.update) {
+      leftChart.data.datasets[0].data = Object.values(leftGestureCounts);
+      leftChart.update();
+    }
+    
+    if (rightChart && rightChart.update) {
+      rightChart.data.datasets[0].data = Object.values(rightGestureCounts);
+      rightChart.update();
+    }
 
-let result;
-try {
-  result = await res.json();
-} catch (e) {
-  console.error('JSON 파싱 오류:', e);
-  return;
+    // 제스처 표시 업데이트
+    if (result.gestures && Array.isArray(result.gestures)) {
+      result.gestures.forEach(g => {
+        if (g.hand && g.gesture) {
+          const emojiGesture = getGestureWithEmoji(g.gesture);
+          
+          if (g.hand === 'Left') {
+            document.getElementById('leftHand').innerText = `🖐 왼손 제스처: ${emojiGesture}`;
+          } else if (g.hand === 'Right') {
+            document.getElementById('rightHand').innerText = `✋ 오른손 제스처: ${emojiGesture}`;
+          }
+        }
+      });
+    }
+
+    // 손가락 상태 업데이트
+    if (result.fingers_list && Array.isArray(result.fingers_list)) {
+      result.fingers_list.forEach(f => {
+        if (f.hand && f.fingers) {
+          const fingerText = `손가락 상태: [${f.fingers.join(', ')}]`;
+          
+          if (f.hand === 'Left') {
+            document.getElementById('leftFingers').innerText = fingerText;
+          } else if (f.hand === 'Right') {
+            document.getElementById('rightFingers').innerText = fingerText;
+          }
+        }
+      });
+    }
+
+    // Firebase로 제스처 전송
+    if (result.gestures && Array.isArray(result.gestures)) {
+      result.gestures.forEach(g => {
+        if (g.hand && g.gesture) {
+          const hand = g.hand;
+          const gesture = g.gesture;
+          
+          // gestureBuffer 객체가 존재하는지 확인
+          if (!gestureBuffer[hand]) {
+            gestureBuffer[hand] = { prevGesture: null, count: 0 };
+          }
+          
+          const buffer = gestureBuffer[hand];
+          
+          if (buffer.prevGesture === gesture) {
+            buffer.count++;
+          } else {
+            buffer.prevGesture = gesture;
+            buffer.count = 1;
+          }
+          
+          // 안정성 임계값에 도달하고 이전에 전송된 제스처와 다른 경우 전송
+          if (buffer.count === STABILITY_THRESHOLD && sentGesture[hand] !== gesture) {
+            sendGestureToFirebase(hand, gesture);
+            sentGesture[hand] = gesture;
+          }
+        }
+      });
+    }
+  } catch (error) {
+    console.error('sendFrame 실행 중 오류:', error);
+  }
 }
 
-  // INITIALIZE
-  document.getElementById('leftHand').innerText = '왼손 인식 안됨';
-  document.getElementById('rightHand').innerText = '오른손 인식 안됨';
-  document.getElementById('fingerStatus').innerText = '';
-
-  // CHART UPDATE: LEFT/RIGHT
-  result.gestures.forEach(g => {
-    const targetCounts = g.hand === 'Left' ? leftGestureCounts : rightGestureCounts;
-    if (g.gesture in targetCounts) {
-      targetCounts[g.gesture]++;
-    }
-  });
-  
-  // CHART REDRAW: LEFT/RIGHT
-  leftChart.data.datasets[0].data = Object.values(leftGestureCounts);
-  leftChart.update();
-  rightChart.data.datasets[0].data = Object.values(rightGestureCounts);
-  rightChart.update();
-
-  // DOCUMENT UPDATE: LEFT/RIGHT
-  // - GESTURE NAME
-  result.gestures.forEach(g => {
-    const emojiGesture = getGestureWithEmoji(g.gesture);
-    if (g.hand === 'Left') {
-      document.getElementById('leftHand').innerText =
-        `🖐 왼손 제스처: ${emojiGesture}`;
-    } else if (g.hand === 'Right') {
-      document.getElementById('rightHand').innerText =
-        `✋ 오른손 제스처: ${emojiGesture}`;
-    }
-  });
-
-  // - FINGER STATUS
-  result.fingers_list.forEach(f => {
-    const fingerText = `손가락 상태: [${f.fingers.join(', ')}]`;
-  
-    if (f.hand === 'Left') {
-      document.getElementById('leftFingers').innerText = fingerText;
-    } else if (f.hand === 'Right') {
-      document.getElementById('rightFingers').innerText = fingerText;
-    }
-  });
-
-  // SEND TO FIREBASE?
-  result.gestures.forEach(g => {
-    const hand = g.hand;
-    const gesture = g.gesture;
-  
-    const buffer = gestureBuffer[hand];
-  
-    if (buffer.prevGesture === gesture) {
-      buffer.count++;
-    } else {
-      buffer.prevGesture = gesture;
-      buffer.count = 1;
-    }
-  
-    // SEND IF ( COUNT REACHED CRITICAL VALUE || DIFFER FROM SENT BEFORE )
-    if (buffer.count === STABILITY_THRESHOLD && sentGesture[hand] !== gesture) {
-      sendGestureToFirebase(hand, gesture);
-      sentGesture[hand] = gesture;
-    }
-  });  
-}
-catch (error) {
-  console.error('sendFrame 실행 중 오류 발생:', error);
-}
-}
-
+// 정해진 간격으로 프레임 전송
 setInterval(sendFrame, 1000);
