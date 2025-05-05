@@ -94,7 +94,8 @@ async function sendFrame() {
   context.drawImage(video, 0, 0, canvas.width, canvas.height);
   const image = canvas.toDataURL('image/jpeg');
 
-  const res = await fetch('/analyze', {
+  try{
+    const res = await fetch('/analyze', {
     method: 'POST',
     body: JSON.stringify({ image }),
     headers: { 'Content-Type': 'application/json' }
@@ -103,7 +104,8 @@ async function sendFrame() {
   if (!res.ok) {
   console.error('서버가 실패 응답을 보냈습니다:', res.status);
   return;
-
+  }
+    
 
 let result;
 try {
@@ -111,8 +113,6 @@ try {
 } catch (e) {
   console.error('JSON 파싱 오류:', e);
   return;
-}
-
 }
 
   // INITIALIZE
@@ -178,6 +178,10 @@ try {
       sentGesture[hand] = gesture;
     }
   });  
+}
+catch (error) {
+  console.error('sendFrame 실행 중 오류 발생:', error);
+}
 }
 
 setInterval(sendFrame, 1000);
