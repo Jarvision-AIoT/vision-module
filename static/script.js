@@ -109,7 +109,25 @@ async function sendFrame() {
     }
 
     // JSON 응답 파싱
-    const result = await response.json();
+   // const result = await response.json();
+
+     const text = await response.text();
+    
+    // 응답이 비어있거나 유효하지 않은지 확인
+    if (!text || text.trim() === '') {
+      console.error('서버 응답이 비어있습니다');
+      return;
+    }
+    
+    // 유효한 JSON인지 확인하고 파싱
+    let result;
+    try {
+      result = JSON.parse(text);
+    } catch (parseError) {
+      console.error('JSON 파싱 오류:', parseError);
+      console.log('받은 응답:', text);
+      return;
+    }
 
     // 초기 상태 설정
     document.getElementById('leftHand').innerText = '왼손 인식 안됨';
