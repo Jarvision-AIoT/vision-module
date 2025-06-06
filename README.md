@@ -21,15 +21,20 @@
 ## 📁 Directory Structure
 ```plaintext
 VISION-MODULE/
-├── static/
+├── model/
+├── templates/
 │   └── script.js
 ├── templates/
 │   └── index.html
-├── .gitignore
-├── app.py
-├── firebase_config.py
-├── README.md
-└── requirements.txt
+├── utils/
+├── LICENSE             // License of classification model
+├── README.md           // README
+├── app.py              // Application with Dashboard
+├── keypoint_classification_EN.ipynb    // Learning gesture
+├── point_history_classification.ipynb  // Learning point gesture
+├── requirements.txt    // Required packages
+├── test_homecam.py     // Test homecam streaming
+└── test_model.py       // Test model
 ```
 
 ## 🚀 Execution
