@@ -1,0 +1,1167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart Gesture Deck</title>
+    <style>
+        :root {
+            --primary-gradient: linear-gradient(135deg, #3d71b5 25%,    #9eb8da 90%);
+            --card-bg: rgba(206, 219, 236, 0.6);
+            --text-color: #333;
+            --button-bg: rgba(255, 255, 255, 0.5);
+            --active-tab-bg: #000;
+            --active-tab-color: #fff;
+            --border-radius: 15px;
+            --shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background: var(--primary-gradient);
+            color: var(--text-color);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        header {
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000;
+        }
+        
+        .tabs-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .tab {
+            padding: 8px 20px;
+            cursor: pointer;
+            border-radius: 20px;
+            margin: 0 5px;
+            font-weight: 500;
+        }
+        
+        .tab.active {
+            background-color: var(--active-tab-bg);
+            color: var(--active-tab-color);
+        }
+        
+        main {
+            flex: 1;
+            padding: 0 20px 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            min-height: calc(100vh - 200px);
+        }
+        
+        .card {
+            background-color: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            box-shadow: var(--shadow);
+            height: 725px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            opacity: 1.0;          
+        }
+        
+        .card-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            color: #000;
+        }
+        
+        .camera-feed {
+            margin-top: 15px;
+            background-color: #eee;
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        
+        /* .detection-label {
+            position: absolute;
+            top: 40px;
+            left: 20px;
+            background-color: rgba(255, 255, 255, 0.7);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 500;
+        } */
+        
+        .device-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .device-row:last-child {
+            border-bottom: none;
+        }
+        
+        .device-name {
+            font-size: 16px;
+        }
+        
+        .toggle-btn {
+            background-color: var(--button-bg);
+            border: none;
+            border-radius: 20px;
+            padding: 8px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .toggle-on {
+            background-color: #000;
+            color: #fff;
+        }
+        
+        .toggle-off {
+            background-color: var(--button-bg);
+        }
+        
+        .gesture-list {
+            list-style: none;
+        }
+        
+        .gesture-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .gesture-time {
+            color: #555;
+            font-size: 14px;
+        }
+        
+        .mapping-list {
+            list-style: none;
+        }
+        
+        .mapping-item {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .update-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            background-color: #000;
+            color: #fff;
+            font-size: 16px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+        
+        footer {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 20px;
+            font-size: 14px;
+            background-color: rgba(0, 0, 0, 0.05);
+            margin-top: auto;
+        }
+        
+        .footer-links a {
+            margin-right: 15px;
+            color: #333;
+            text-decoration: none;
+        }
+        
+        .room-card {
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .room-status {
+            margin-top: 15px;
+            color: #666;
+        }
+        
+        .security-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .security-btn {
+            flex: 1;
+            padding: 8px;
+            border: none;
+            border-radius: 10px;
+            background-color: var(--button-bg);
+            cursor: pointer;
+        }
+        
+        /* Smart device table styles */
+        .device-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .device-table th, 
+        .device-table td {
+            text-align: left;
+            padding: 12px;
+        }
+        
+        .device-table th {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .device-table tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .device-table button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--button-bg);
+            cursor: pointer;
+        }
+        
+        /* Gesture mapping styles */
+        .gesture-mapping {
+            display: flex;
+            margin-bottom: 20px;
+        }
+        
+        .gesture-column {
+            flex: 1;
+            margin-right: 15px;
+        }
+        
+        .gesture-option {
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.4);
+            margin-bottom: 5px;
+            border-radius: 8px;
+        }
+        
+        .mapping-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .mapping-table th, 
+        .mapping-table td {
+            text-align: left;
+            padding: 12px;
+        }
+        
+        .mapping-table th {
+            border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .mapping-table tr {
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .mapping-table button {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 5px;
+            background-color: var(--button-bg);
+            cursor: pointer;
+            margin-right: 5px;
+        }
+        
+        /* Settings styles */
+        .settings-section {
+            margin-bottom: 20px;
+        }
+        
+        .settings-row {
+            display: flex;
+            margin-bottom: 15px;
+        }
+        
+        .settings-col {
+            flex: 1;
+            margin-right: 15px;
+        }
+        
+        .settings-col:last-child {
+            margin-right: 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        
+        select, input[type="range"] {
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+        }
+        
+        .checkbox-label input {
+            margin-right: 10px;
+        }
+        
+        .range-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-top: 5px;
+        }
+        
+        .save-btn {
+            padding: 12px 25px;
+            background-color: #000;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 15px;
+        }
+        
+        .tabs {
+            display: none;
+        }
+        .detection-label {
+
+            position: absolute; 
+            padding : 2px 7px;           
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            background-color: rgba(0, 0, 0, 0.4);
+            color: white;
+            border-radius: 4px;
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 10;
+            transition: background-color 0.3s ease;
+        }
+
+        .detection-label.highlight {
+            background-color: rgba(76, 175, 80, 1.0);
+        }
+
+        /* 제스처 기록 관련 스타일 */
+        .gesture-history {
+            flex: 1;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 12px;
+            margin: 5px 0;
+            border-radius: 4px;
+            background-color: #f5f5f5;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .history-item.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .gesture-time {
+            color: #666;
+            font-size: 14px;
+        }
+
+        .gesture-name {
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* 최근 추가된 항목 강조 */
+        .history-item:first-child {
+            background-color: #e3f2fd;
+            border-left: 3px solid #2196F3;
+        }
+
+        .device-status {
+            font-weight: bold;
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 14px;
+        }
+
+        .device-status.on {
+            background-color: #4CAF50;
+            color: white;
+        }
+
+        .device-status.off {
+            background-color: #f44336;
+            color: white;
+        }
+
+        .device-speed {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* 제스처 호버 이미지 스타일 */
+.gesture-cell {
+    position: relative;
+    cursor: pointer;
+}
+
+.gesture-preview {
+    position: absolute;
+    top: -120px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: white;
+    border: 2px solid #333;
+    border-radius: 10px;
+    padding: 15px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    min-width: 150px;
+    text-align: center;
+}
+
+.gesture-cell:hover .gesture-preview {
+    opacity: 1;
+    visibility: visible;
+}
+
+.gesture-emoji {
+    font-size: 60px;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.gesture-name {
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* 테이블이 overflow되지 않도록 */
+.mapping-table {
+    position: relative;
+    z-index: 1;
+}
+
+    </style>
+</head>
+<body>
+    <div id="app">
+        <header>
+            <div class="logo" style = "font-size: 36px; color: #f5f5f5">Smart Gesture Deck</div>
+            <div>
+                <button class="toggle-btn">마이 홈</button>
+            </div>
+        </header>
+        
+        <div class="tabs-container">
+            <div class="tab active" onclick="showTab('dashboard')">대시보드</div>
+            <div class="tab" onclick="showTab('devices')">방</div>
+            <div class="tab" onclick="showTab('mappings')">Mapping</div>
+            <div class="tab" onclick="showTab('settings')">Beta</div>
+        </div>
+        
+        <!-- Dashboard Page -->
+        <main id="dashboard-content" class="tabs">
+                       
+            <div class="card">
+                <h2 class="card-title">거실</h2>
+                <div class="camera-feed">
+                    <div class="detection-label" style="width: 65px; height: 30px;">None</div>
+                    <video id="webcam" autoplay playsinline style="display: none"></video>
+                    <img id="analyzedImage" alt="Gesture Recognition" style="width: 100%; height: 100%; object-fit: cover; border-radius: 5px;">
+                </div>
+                <h2 class="card-title" style="padding: 20px 0px 0px 0px">Detected Gestures </h2>
+                <div id="gesture-history" class="gesture-history"></div> 
+            </div>
+            
+                    
+            <div class="card">
+                    <h2 class="card-title">Gestures Mapping</h2>
+    <table class="mapping-table">
+        <thead>
+            <tr>
+                <th>Gesture</th>
+                <th>Device</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="gesture-cell">
+                    Open
+                    <div class="gesture-preview">
+                        <span class="gesture-emoji">✋</span>
+                        <span class="gesture-name">Open</span>
+                    </div>
+                </td>
+                <td>무드등</td>
+                <td>Light ON</td>
+            </tr>
+            <tr>
+                <td class="gesture-cell">
+                    Close
+                    <div class="gesture-preview">
+                        <span class="gesture-emoji">✊</span>
+                        <span class="gesture-name">Close</span>
+                    </div>
+                </td>
+                <td>무드등</td>
+                <td>Light OFF</td>
+            </tr>
+            <tr>
+                <td class="gesture-cell">
+                    Peace
+                    <div class="gesture-preview">
+                        <span class="gesture-emoji">✌️</span>
+                        <span class="gesture-name">Peace</span>
+                    </div>
+                </td>
+                <td>TV</td>
+                <td>Turn ON/OFF</td>
+            </tr>
+            <tr>
+                <td class="gesture-cell">
+                    Rock
+                    <div class="gesture-preview">
+                        <span class="gesture-emoji">🤟</span>
+                        <span class="gesture-name">Rock</span>
+                    </div>
+                </td>
+                <td>선풍기</td>
+                <td>Turn ON/OFF</td>
+            </tr>
+            <tr>
+                <td class="gesture-cell">
+                    One
+                    <div class="gesture-preview">
+                        <span class="gesture-emoji">☝️</span>
+                        <span class="gesture-name">One</span>
+                    </div>
+                </td>
+                <td>선풍기</td>
+                <td>Speed DOWN</td>
+            </tr>
+            <tr>
+                <td class="gesture-cell">
+                    Two
+                    <div class="gesture-preview">
+                        <span class="gesture-emoji">👆</span>
+                        <span class="gesture-name">Two</span>
+                    </div>
+                </td>
+                <td>선풍기</td>
+                <td>Speed UP</td>
+            </tr>
+            <tr>
+                <td class="gesture-cell">
+                    Heart
+                    <div class="gesture-preview">
+                        <span class="gesture-emoji">🫰</span>
+                        <span class="gesture-name">Heart</span>
+                    </div>
+                </td>
+                <td>다중기기</td>
+                <td>동시 제어</td>
+            </tr>
+            <tr>
+                <td class="gesture-cell">
+                    
+                </td>
+                <td></td>
+                <td></td>
+            </tr>
+        </tbody>
+    </table>
+                 <!-- <table class="mapping-table">
+                    <thead>
+                        <tr>
+                            <th>Gesture</th>
+                            <th>Device</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Open</td>
+                            <td>무드등</td>
+                            <td>Light ON</td>
+                        </tr>
+                        <tr>
+                            <td>Close</td>
+                            <td>무드등</td>
+                            <td>Light OFF</td>
+                        </tr>
+                        <tr>
+                            <td>Peace</td>
+                            <td>TV</td>
+                            <td>Turn ON/OFF</td>
+                        </tr>
+                        <tr>
+                            <td>Rock</td>
+                            <td>선풍기</td>
+                            <td>Turn ON/OFF</td>
+                        </tr>
+                        <tr>
+                            <td>One</td>
+                            <td>선풍기</td>
+                            <td>Speed DOWN</td>
+                        </tr>
+                        <tr>
+                            <td>Two</td>
+                            <td>선풍기</td>
+                            <td>Speed UP</td>
+                        </tr>
+                        <tr>
+                            <td>Heart</td>
+                            <td>다중기기</td>
+                            <td>동시 제어</td>
+                        </tr>  
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <td></td>
+                        </tr>                      
+                    </tbody>
+                </table> -->
+                <h2 class="card-title">Device Status</h2>
+                    <div class="device-row">
+                        <div class="device-name">무드등</div>
+                        <div id="mood-light-status" class="device-status">OFF</div>
+                    </div>
+                    <div class="device-row">
+                        <div class="device-name">TV</div>
+                        <div id="tv-status" class="device-status">OFF</div>
+                    </div>
+                    <div class="device-row">
+                        <div class="device-name">선풍기</div>
+                        <!-- <div id="fan-status" class="device-status">OFF</div>
+                        <div id="fan-speed" class="device-speed" style="display: none;">SPEED: 0</div> -->
+                        <div style="display: flex; flex-direction: column; align-items: flex-end;">
+                        <div id="fan-status" class="device-status">OFF</div>
+                        <div id="fan-speed" class="device-speed" style="display: none;">SPEED: 0</div>
+    </div>
+                    </div>               
+            </div>
+
+            <script src="/static/script.js"></script>
+            <script>
+
+// 페이지 로드 시 제스처 감지 모니터링 시작
+document.addEventListener('DOMContentLoaded', function() {
+    // 기존 감지 라벨 요소 선택
+    const detectionLabel = document.querySelector('.detection-label');
+    const gestureHistory = document.getElementById('gesture-history');
+    let lastGesture = detectionLabel.textContent;
+    const originalContent = detectionLabel.textContent;
+    let lastDetectedGesture = '';
+    updateDeviceStatus();
+
+    setInterval(function() {
+        fetch('/api/current_gesture')
+            .then(response => response.json())
+            .then(data => {
+                if (data.gesture === 'None') {
+                    // None일 때는 라벨만 업데이트하고 하이라이트/히스토리는 추가하지 않음
+                    detectionLabel.textContent = data.gesture;
+                    lastGesture = data.gesture;
+
+                    
+                }
+                else if (data.gesture !== lastGesture && data.gesture !== 'None') {
+
+                    // 제스처 업데이트
+                    detectionLabel.textContent = data.gesture;
+                    
+                    // 히스토리에 추가 (MQTT 메시지가 전송될 때만)
+                    let temp = detectionLabel.textContent;
+                    temp = data.gesture;
+                    
+                    addGestureToHistory(data.gesture);
+                    controlDevice(temp);
+                   
+                    // 하이라이트 효과 적용
+                    detectionLabel.classList.add('highlight');
+                    setTimeout(() => {
+                        detectionLabel.classList.remove('highlight');
+                    }, 1000);
+                    
+                    lastGesture = data.gesture;
+                } 
+            })
+            .catch(error => console.error('Error fetching gesture:', error));
+    }, 500);
+    
+
+    function addGestureToHistory(gestureName) {
+        // 현재 시간 가져오기
+        const now = new Date();
+        const timeString = now.toLocaleTimeString();
+        
+        // 새 기록 항목 생성
+        const historyItem = document.createElement('div');
+        historyItem.className = 'history-item';
+        historyItem.innerHTML = `
+            <span class="gesture-time">${timeString}</span>
+            <span class="gesture-name">${gestureName}</span>
+        `;
+        
+        // 기록 목록의 맨 위에 추가 (최신 항목이 위로 오도록)
+        gestureHistory.insertBefore(historyItem, gestureHistory.firstChild);
+        
+        // 애니메이션 효과 추가
+        setTimeout(() => {
+            historyItem.classList.add('visible');
+        }, 10);
+        
+        // 선택사항: 기록 항목 수 제한 (예: 최대 10개)
+        const maxHistoryItems = 10;
+        while (gestureHistory.children.length > maxHistoryItems) {
+            gestureHistory.removeChild(gestureHistory.lastChild);
+        }
+    }
+});
+
+</script>
+
+        </main>
+        
+        <!-- Devices Page -->
+        <main id="devices-content" class="tabs">
+            <div class="card" style="grid-column: 1 / -1;">
+                <h2 class="card-title">Connected Devices</h2>
+                <table class="device-table">
+                    <thead>
+                        <tr>
+                            <th>Device Name</th>
+                            <th>Type</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Living Room Light</td>
+                            <td>Smart Light</td>
+                            <td>ON</td>
+                            <td>
+                                <button>Configure</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Bedroom Fan</td>
+                            <td>Smart Fan</td>
+                            <td>OFF</td>
+                            <td>
+                                <button>Configure</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Living Room TV</td>
+                            <td>Smart TV</td>
+                            <td>OFF</td>
+                            <td>
+                                <button>Configure</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Front Door Camera</td>
+                            <td>Camera</td>
+                            <td>Connected</td>
+                            <td>
+                                <button>Configure</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+        
+        <!-- Mappings Page -->
+        <main id="mappings-content" class="tabs">
+            <div class="card" style="grid-column: 1 / -1;">
+                <h2 class="card-title">Gesture Mappings</h2>
+                <p style="margin-bottom: 20px;">Configure which gestures control which devices.</p>
+                
+                <!-- <div class="gesture-mapping">
+                    <div class="gesture-column">
+                        <h3 style="margin-bottom: 10px;">Available Gestures</h3>
+                        <div class="gesture-option">Peace Sign</div>
+                        <div class="gesture-option">Fist</div>
+                        <div class="gesture-option">CW Gesture</div>
+                        <div class="gesture-option">CCW Gesture</div>
+                        <div class="gesture-option">Thumbs Up</div>
+                        <div class="gesture-option">Open Palm</div>
+                    </div>
+                    
+                    <div class="gesture-column">
+                        <h3 style="margin-bottom: 10px;">Available Actions</h3>
+                        <div class="gesture-option">Light ON</div>
+                        <div class="gesture-option">Light OFF</div>
+                        <div class="gesture-option">Fan ON</div>
+                        <div class="gesture-option">Fan OFF</div>
+                        <div class="gesture-option">Volume Up</div>
+                        <div class="gesture-option">Volume Down</div>
+                    </div>
+                </div> -->
+                
+                <h3 style="margin: 15px 0 10px;">Current Mappings</h3>
+                <table class="mapping-table">
+                    <thead>
+                        <tr>
+                            <th>Gesture</th>
+                            <th>Device</th>
+                            <th>Action</th>
+                            <th>Options</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Open</td>
+                            <td>무드등</td>
+                            <td>Light ON</td>
+                            <td>
+                                <button>Edit</button>
+                                <button>Delete</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Close</td>
+                            <td>무드등</td>
+                            <td>Light OFF</td>
+                            <td>
+                                <button>Edit</button>
+                                <button>Delete</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Peace</td>
+                            <td>TV</td>
+                            <td>Turn ON/OFF</td>
+                            <td>
+                                <button>Edit</button>
+                                <button>Delete</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Rock</td>
+                            <td>선풍기</td>
+                            <td>Turn ON/OFF</td>
+                            <td>
+                                <button>Edit</button>
+                                <button>Delete</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>One</td>
+                            <td>선풍기</td>
+                            <td>Speed UP</td>
+                            <td>
+                                <button>Edit</button>
+                                <button>Delete</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Two</td>
+                            <td>선풍기</td>
+                            <td>Speed DOWN</td>
+                            <td>
+                                <button>Edit</button>
+                                <button>Delete</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Heart</td>
+                            <td>다중기기</td>
+                            <td>동시 제어</td>
+                            <td>
+                                <button>Edit</button>
+                                <button>Delete</button>
+                            </td>
+                        </tr>                       
+                    </tbody>
+                </table>
+            </div>
+        </main>
+        
+        <!-- Settings Page -->
+        <main id="settings-content" class="tabs">
+            <div class="card" style="grid-column: 1 / -1;">
+                <h2 class="card-title">Application Settings</h2>
+                
+                <div class="settings-section">
+                    <h3 style="margin: 15px 0 10px;">Camera Settings</h3>
+                    <div class="settings-row">
+                        <div class="settings-col">
+                            <label>Camera Source</label>
+                            <select>
+                                <option>Default Camera</option>
+                                <option>External Webcam</option>
+                                <option>IP Camera</option>
+                            </select>
+                        </div>
+                        <div class="settings-col">
+                            <label>Resolution</label>
+                            <select>
+                                <option>640x480</option>
+                                <option>1280x720</option>
+                                <option>1920x1080</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3 style="margin: 15px 0 10px;">Gesture Recognition</h3>
+                    <div>
+                        <label>Detection Sensitivity</label>
+                        <input type="range" min="1" max="10" value="7">
+                        <div class="range-labels">
+                            <span>Low</span>
+                            <span>High</span>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-top: 15px;">
+                        <label class="checkbox-label">
+                            <input type="checkbox" checked>
+                            Enable continuous detection
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="settings-section">
+                    <h3 style="margin: 15px 0 10px;">Notifications</h3>
+                    <div>
+                        <label class="checkbox-label">
+                            <input type="checkbox" checked>
+                            Enable sound notifications
+                        </label>
+                    </div>
+                    
+                    <div style="margin-top: 10px;">
+                        <label class="checkbox-label">
+                            <input type="checkbox" checked>
+                            Show on-screen gesture confirmation
+                        </label>
+                    </div>
+                </div>
+                
+                <button class="save-btn">Save Settings</button>
+            </div>
+        </main>
+        
+        <footer>
+            <div class="footer-links">
+                <a href="#">Terms of Service</a>
+                <a href="#">Privacy Policy</a>
+                <a href="#">Cookie Policy</a>
+            </div>
+            <div class="footer-time">7:59:21</div>
+        </footer>
+    </div>
+    
+    <script>
+        // Show the dashboard by default
+        document.getElementById('dashboard-content').style.display = 'grid';
+
+        // 기기 상태 변수들
+        let deviceStates = {
+            moodLight: false,  // 무드등 상태
+            tv: false,         // TV 상태
+            fan: {
+                power: false,  // 선풍기 전원 상태
+                speed: 3       // 선풍기 속도 (0-3)
+            }
+        };
+
+        // 기기 상태 업데이트 함수
+        function updateDeviceStatus() {
+            // 무드등 상태 업데이트
+            const moodLightElement = document.getElementById('mood-light-status');
+            moodLightElement.textContent = deviceStates.moodLight ? 'ON' : 'OFF';
+            moodLightElement.className = `device-status ${deviceStates.moodLight ? 'on' : 'off'}`;
+            
+            // TV 상태 업데이트
+            const tvElement = document.getElementById('tv-status');
+            tvElement.textContent = deviceStates.tv ? 'ON' : 'OFF';
+            tvElement.className = `device-status ${deviceStates.tv ? 'on' : 'off'}`;
+            
+            // 선풍기 상태 업데이트
+            const fanElement = document.getElementById('fan-status');
+            const fanSpeedElement = document.getElementById('fan-speed');
+            
+            fanElement.textContent = deviceStates.fan.power ? 'ON' : 'OFF';
+            fanElement.className = `device-status ${deviceStates.fan.power ? 'on' : 'off'}`;
+            
+            if (deviceStates.fan.power && deviceStates.fan.speed > 3) {
+                fanSpeedElement.style.display = 'block';
+                fanSpeedElement.textContent = `SPEED: ${deviceStates.fan.speed}`;
+            } else {
+                fanSpeedElement.style.display = 'none';
+            }
+        }
+
+        // 제스처에 따른 기기 제어 함수
+        function controlDevice(gesture) {
+            switch(gesture) {
+                case 'Open':
+                    deviceStates.moodLight = true;
+                    break;
+                case 'Close':
+                    deviceStates.moodLight = false;
+                    break;
+                case 'Peace':
+                    deviceStates.tv = !deviceStates.tv;
+                    break;
+                case 'Rock':
+                    deviceStates.fan.power = !deviceStates.fan.power;
+                    if (!deviceStates.fan.power) deviceStates.fan.speed = 0;
+                    else if (deviceStates.fan.speed === 0) deviceStates.fan.speed = 1;
+                    break;
+                case 'One':
+                    if (deviceStates.fan.power && deviceStates.fan.speed > 0) {
+                        deviceStates.fan.speed--;
+                        if (deviceStates.fan.speed === 0) deviceStates.fan.power = false;
+                    }
+                    break;
+                case 'Two':
+                    if (deviceStates.fan.power && deviceStates.fan.speed < 3) {
+                        deviceStates.fan.speed++;
+                    } else if (!deviceStates.fan.power) {
+                        deviceStates.fan.power = true;
+                        deviceStates.fan.speed = 1;
+                    }
+                    break;
+                case 'Heart':
+                    // 모든 기기 동시 제어 (하나라도 켜져있으면 모두 끄기, 모두 꺼져있으면 모두 켜기)
+                    const anyDeviceOn = deviceStates.moodLight || deviceStates.tv || deviceStates.fan.power;
+                    deviceStates.moodLight = !anyDeviceOn;
+                    deviceStates.tv = !anyDeviceOn;
+                    deviceStates.fan.power = !anyDeviceOn;
+                    deviceStates.fan.speed = anyDeviceOn ? 0 : 1;
+                    break;
+            }
+            updateDeviceStatus();
+        }
+    
+        async function setupWebcam() {
+            const video = document.getElementById('webcam');
+            
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: { 
+                        width: { ideal: 640 },
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    }
+                });
+                
+                video.srcObject = stream;
+                
+                return new Promise((resolve) => {
+                    video.onloadedmetadata = () => {
+                        resolve(video);
+                    };
+                });
+            } catch (error) {
+                console.error('Error accessing webcam:', error);
+                alert('카메라 접근 권한이 필요합니다. 권한을 허용해주세요.');
+            }
+        }
+        
+        function showTab(tabName) {
+            // Hide all tabs
+            const tabs = document.querySelectorAll('.tabs');
+            tabs.forEach(tab => {
+                tab.style.display = 'none';
+            });
+            
+            // Show the selected tab
+            document.getElementById(tabName + '-content').style.display = 'grid';
+            
+            // Update active tab
+            const tabButtons = document.querySelectorAll('.tab');
+            tabButtons.forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Find the button that was clicked and make it active
+            const activeTabIndex = ['dashboard', 'devices', 'mappings', 'settings'].indexOf(tabName);
+            if (activeTabIndex >= 0) {
+                tabButtons[activeTabIndex].classList.add('active');
+            }
+        }
+        
+        function toggleDevice(button, device) {
+            const isOn = button.textContent === 'ON';
+            button.textContent = isOn ? 'OFF' : 'ON';
+            button.classList.toggle('toggle-on');
+            button.classList.toggle('toggle-off');
+            
+            console.log(`${device} is now ${isOn ? 'OFF' : 'ON'}`);
+        }
+        
+        
+        
+        window.onload = async function() {
+            await setupWebcam();
+        };
+    </script>
+</body>
+</html>
