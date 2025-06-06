@@ -1,9 +1,9 @@
 # Vision Module - Jarvision
-홈캠(카메라) 기반 손동작 인식 기능. Mediapipe를 활용하여 손동작을 인식하고, 제스처 분석을 수행
+홈캠(카메라) 기반 손동작 인식 기능. Mediapipe를 활용하여 손동작을 인식하고, 제스처 분석을 수행한다.
 
 ## ✨ Application
 - Mediapipe 기반 손동작 인식
-- MLP 기반 손동작 모델 학습습
+- MLP 기반 손동작 모델 학습
 
 ## 🔧 Tech Stack
 
