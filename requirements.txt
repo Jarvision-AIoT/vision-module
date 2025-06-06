@@ -1,6 +1,0 @@
-flask
-opencv-python
-mediapipe
-numpy
-firebase-admin
-python-dotenv
